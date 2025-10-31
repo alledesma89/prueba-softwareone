@@ -1,0 +1,58 @@
+{
+  "posts": [
+    {
+      "title": "subir commits a github",
+      "body": "para poder enseñar el proyecto",
+      "userId": 1,
+      "status": "in-progress",
+      "priority": "medium",
+      "dueDate": "2025-10-31",
+      "id": 5
+    },
+    {
+      "title": "sadsadas",
+      "body": "dsasdasd",
+      "userId": 1,
+      "status": "completed",
+      "priority": "high",
+      "dueDate": "2025-10-31",
+      "id": 6
+    },
+    {
+      "title": "dfdsaf",
+      "body": "sadsd",
+      "userId": 1,
+      "status": "pending",
+      "priority": "medium",
+      "dueDate": "2025-10-31",
+      "id": 7
+    },
+    {
+      "title": "sasdasd",
+      "body": "sdasdsad",
+      "userId": 1,
+      "status": "in-progress",
+      "priority": "high",
+      "dueDate": "2025-10-31",
+      "id": 8
+    },
+    {
+      "title": "dasdasdsa",
+      "body": "sdsada",
+      "userId": 1,
+      "status": "completed",
+      "priority": "high",
+      "dueDate": "2025-10-31",
+      "id": 9
+    },
+    {
+      "title": "sdsad creado",
+      "body": "dejejej",
+      "userId": 1,
+      "status": "in-progress",
+      "priority": "medium",
+      "dueDate": "2025-10-31",
+      "id": 10
+    }
+  ]
+}
