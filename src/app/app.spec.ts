@@ -1,12 +1,21 @@
 import { provideZonelessChangeDetection } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
 import { App } from './app';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App],
-      providers: [provideZonelessChangeDetection()]
+      imports: [App, RouterTestingModule],
+      providers: [
+        provideZonelessChangeDetection(),
+        { 
+          provide: ActivatedRoute, 
+          useValue: { paramMap: of({ get: () => '1' }), data: of({ mode: 'view' }) } 
+        }
+      ]
     }).compileComponents();
   });
 

@@ -1,13 +1,27 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { ApplicationConfig, isDevMode, importProvidersFrom, ErrorHandler } from '@angular/core';
+import { provideServiceWorker } from '@angular/service-worker';
+import { provideHttpClient, withFetch } from '@angular/common/http';
 
-import { routes } from './app.routes';
-import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+import { AppRoutingModule } from './app-routing.module';
+import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { ErrorInterceptor } from './core/interceptors/error.interceptor';
+import { GlobalErrorHandler } from './core/services/global-error-handler';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideBrowserGlobalErrorListeners(),
-    provideZonelessChangeDetection(),
-    provideRouter(routes), provideClientHydration(withEventReplay())
+    // Use Router configuration from AppRoutingModule so RouterModule.forRoot(..., { preloadingStrategy: PreloadAllModules }) is applied
+    importProvidersFrom(AppRoutingModule),
+  // Provide HttpClient for services used during prerender/server rendering
+  // Use withFetch() for better SSR compatibility
+  provideHttpClient(withFetch()),
+    // Register HTTP interceptors implemented in core/interceptors
+    AuthInterceptor.provider,
+    ErrorInterceptor.provider,
+    // Provide the application's global ErrorHandler implementation
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000'
+    })
   ]
 };
