@@ -61,11 +61,19 @@ import { Task } from '../../../../core/models/task.model';
   <!-- Charts Grid -->
   <div class="charts-grid" *ngIf="isBrowser">
         <!-- Task Status Distribution -->
-        <mat-card class="chart-card">
+  <mat-card class="chart-card" [class.expanded]="expandedChart === 'status'">
           <mat-card-header>
             <mat-card-title>Distribución por estado</mat-card-title>
+            <div class="card-actions">
+              <button mat-icon-button aria-label="mostrar/ocultar" (click)="toggleShow('status')">
+                <mat-icon>{{ showStatus ? 'visibility' : 'visibility_off' }}</mat-icon>
+              </button>
+              <button mat-icon-button aria-label="expandir" (click)="toggleExpand('status')">
+                <mat-icon>{{ expandedChart === 'status' ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+              </button>
+            </div>
           </mat-card-header>
-          <mat-card-content>
+          <mat-card-content *ngIf="showStatus" [class.hidden-content]="!showStatus">
             <canvas baseChart
               [data]="statusChartData"
               [options]="pieChartOptions"
@@ -75,11 +83,19 @@ import { Task } from '../../../../core/models/task.model';
         </mat-card>
 
         <!-- Task Priority Distribution -->
-        <mat-card class="chart-card">
+  <mat-card class="chart-card" [class.expanded]="expandedChart === 'priority'">
           <mat-card-header>
             <mat-card-title>Tareas por prioridad</mat-card-title>
+            <div class="card-actions">
+              <button mat-icon-button aria-label="mostrar/ocultar" (click)="toggleShow('priority')">
+                <mat-icon>{{ showPriority ? 'visibility' : 'visibility_off' }}</mat-icon>
+              </button>
+              <button mat-icon-button aria-label="expandir" (click)="toggleExpand('priority')">
+                <mat-icon>{{ expandedChart === 'priority' ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+              </button>
+            </div>
           </mat-card-header>
-          <mat-card-content>
+          <mat-card-content *ngIf="showPriority">
             <canvas baseChart
               [data]="priorityChartData"
               [options]="barChartOptions"
@@ -89,11 +105,19 @@ import { Task } from '../../../../core/models/task.model';
         </mat-card>
 
         <!-- Tasks Trend -->
-        <mat-card class="chart-card">
+  <mat-card class="chart-card" [class.expanded]="expandedChart === 'trend'">
           <mat-card-header>
             <mat-card-title>Tendencia de tareas</mat-card-title>
+            <div class="card-actions">
+              <button mat-icon-button aria-label="mostrar/ocultar" (click)="toggleShow('trend')">
+                <mat-icon>{{ showTrend ? 'visibility' : 'visibility_off' }}</mat-icon>
+              </button>
+              <button mat-icon-button aria-label="expandir" (click)="toggleExpand('trend')">
+                <mat-icon>{{ expandedChart === 'trend' ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+              </button>
+            </div>
           </mat-card-header>
-          <mat-card-content>
+          <mat-card-content *ngIf="showTrend">
             <canvas baseChart
               [data]="trendChartData"
               [options]="lineChartOptions"
@@ -173,6 +197,19 @@ import { Task } from '../../../../core/models/task.model';
       overflow: hidden;
     }
 
+    /* When a chart is expanded, make it span the full width and be taller */
+    .chart-card.expanded {
+      grid-column: 1 / -1;
+      min-height: 620px;
+    }
+
+    .card-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
     .chart-card mat-card-header {
       padding: 16px;
       background: rgba(0,0,0,0.02);
@@ -191,11 +228,24 @@ import { Task } from '../../../../core/models/task.model';
       max-width: 500px;
       margin: 0 auto;
     }
+
+    /* When expanded make canvas full width */
+    .chart-card.expanded canvas {
+      max-width: none !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
   `]
 })
 export class DashboardComponent implements OnInit {
   private platformId = inject(PLATFORM_ID);
   private taskService = inject(TaskService);
+
+  // UI state for charts
+  public expandedChart: string | null = null;
+  public showStatus = true;
+  public showPriority = true;
+  public showTrend = true;
 
   constructor() {
     // Registrar componentes de Chart.js
@@ -242,15 +292,26 @@ export class DashboardComponent implements OnInit {
 
   public lineChartOptions: ChartConfiguration['options'] = {
     responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
+    plugins: {
+      legend: { display: true, position: 'top' },
+      tooltip: { mode: 'index', intersect: false }
+    },
     scales: {
+      x: { display: true, grid: { display: false } },
       y: {
-        beginAtZero: true
+        beginAtZero: true,
+        ticks: { stepSize: 1 },
+        grid: { color: 'rgba(0,0,0,0.05)' }
       }
     },
     elements: {
-      line: {
-        tension: 0.4
-      }
+      line: { tension: 0.3, borderWidth: 2 },
+      point: { radius: 4, hoverRadius: 6 }
     }
   };
 
@@ -266,10 +327,10 @@ export class DashboardComponent implements OnInit {
   };
 
   public trendChartData: ChartData<'line'> = {
-    labels: ['Semana -3', 'Semana -2', 'Semana -1', 'Semana actual'],
+    labels: [],
     datasets: [
-      { data: [0, 0, 0, 0], label: 'Tareas completadas', borderColor: '#4caf50', fill: false },
-      { data: [0, 0, 0, 0], label: 'En progreso', borderColor: '#2196f3', fill: false }
+      { data: [], label: 'Tareas completadas', borderColor: '#4caf50', backgroundColor: 'rgba(76,175,80,0.12)', fill: 'origin' },
+      { data: [], label: 'En progreso', borderColor: '#2196f3', backgroundColor: 'rgba(33,150,243,0.12)', fill: 'origin' }
     ]
   };
 
@@ -300,24 +361,32 @@ export class DashboardComponent implements OnInit {
           datasets: [{ data: [high, medium, low], backgroundColor: ['#f44336', '#ff9800', '#4caf50'], label: 'Tareas por prioridad' }]
         };
 
-        // Tendencia simple: agrupa completadas/en progreso por semana relativa a hoy usando dueDate
+        // Nueva tendencia: mostrar últimos 7 días con área (completadas vs en progreso) usando dueDate
         const now = new Date();
-        const weeks: Task[][] = [[], [], [], []]; // -3 .. 0
-        tasks.forEach(t => {
-          if (!t.dueDate) { return; }
-          const d = new Date(t.dueDate);
-          const diffDays = Math.floor((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-          const weekIndex = Math.max(0, Math.min(3, Math.floor((diffDays + 21) / 7))); // map to 0..3
-          weeks[weekIndex].push(t);
-        });
+        const last7: string[] = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(now);
+          d.setDate(now.getDate() - i);
+          last7.push(d.toISOString().split('T')[0]);
+        }
 
-        const completedByWeek = weeks.map(w => w.filter(t => t.status === 'completed').length);
-        const inProgressByWeek = weeks.map(w => w.filter(t => t.status === 'in-progress').length);
+        const completedByDay = last7.map(date =>
+          tasks.filter(t => t.dueDate && t.dueDate.split('T')[0] === date && t.status === 'completed').length
+        );
+
+        const inProgressByDay = last7.map(date =>
+          tasks.filter(t => t.dueDate && t.dueDate.split('T')[0] === date && t.status === 'in-progress').length
+        );
+
         this.trendChartData = {
-          labels: ['Semana -3', 'Semana -2', 'Semana -1', 'Semana actual'],
+          labels: last7.map(d => {
+            // friendly label like '30 Oct'
+            const dd = new Date(d + 'T00:00:00');
+            return `${dd.getDate()} ${dd.toLocaleString(undefined, { month: 'short' })}`;
+          }),
           datasets: [
-            { data: completedByWeek, label: 'Tareas completadas', borderColor: '#4caf50', fill: false },
-            { data: inProgressByWeek, label: 'En progreso', borderColor: '#2196f3', fill: false }
+            { data: completedByDay, label: 'Tareas completadas', borderColor: '#4caf50', backgroundColor: 'rgba(76,175,80,0.12)', fill: 'origin' },
+            { data: inProgressByDay, label: 'En progreso', borderColor: '#2196f3', backgroundColor: 'rgba(33,150,243,0.12)', fill: 'origin' }
           ]
         };
       },
@@ -325,6 +394,20 @@ export class DashboardComponent implements OnInit {
         // mantener valores por defecto
       }
     });
+  }
+
+  /** Toggle expand/restore for a chart */
+  public toggleExpand(name: string): void {
+    this.expandedChart = this.expandedChart === name ? null : name;
+  }
+
+  /** Toggle visibility for a chart */
+  public toggleShow(name: string): void {
+    switch (name) {
+      case 'status': this.showStatus = !this.showStatus; break;
+      case 'priority': this.showPriority = !this.showPriority; break;
+      case 'trend': this.showTrend = !this.showTrend; break;
+    }
   }
 
   // Nota: ngOnInit se usa arriba para establecer isBrowser y ejecutar inicialización solo en cliente
