@@ -5,6 +5,7 @@ import { provideHttpClient, withFetch } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 
 import { ErrorInterceptor } from './core/interceptors/error.interceptor';
+import { AuthInterceptorProvider } from './core/interceptors/auth.interceptor';
 import { GlobalErrorHandler } from './core/services/global-error-handler';
 
 export const appConfig: ApplicationConfig = {
@@ -17,6 +18,7 @@ export const appConfig: ApplicationConfig = {
     // Register HTTP interceptors implemented in core/interceptors
 
     ErrorInterceptor.provider,
+    AuthInterceptorProvider,
     // Provide the application's global ErrorHandler implementation
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideServiceWorker('ngsw-worker.js', {

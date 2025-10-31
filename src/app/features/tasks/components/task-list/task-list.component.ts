@@ -134,7 +134,7 @@ import { Task } from '../../../../core/models/task.model';
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let task; columns: displayedColumns"
+            <tr mat-row *matRowDef="let task; columns: displayedColumns; trackBy: trackByTaskId"
                 (click)="editTask(task)"
                 class="task-row">
             </tr>
