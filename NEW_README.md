@@ -31,7 +31,7 @@ Aplicación de gestión de tareas desarrollada con Angular 17+ y Material Design
 
 1.  Clonar el repositorio:
     ```bash
-    git clone <url-del-repo>
+    git clone https://github.com/alledesma89/prueba-softwareone/
     cd prueba-softwareone
     ```
 
@@ -49,7 +49,8 @@ Aplicación de gestión de tareas desarrollada con Angular 17+ y Material Design
     npm run serve:mock
     ```
 
-4.  Abrir el navegador en `http://localhost:4200`
+4.  Abrir el navegador en `http://localhost:4200` 
+ng serve
 
 ## Estructura del proyecto
 
