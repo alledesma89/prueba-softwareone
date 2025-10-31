@@ -1,13 +1,13 @@
 
-import { DataSource } from '@angular/cdk/collections';
+import { CollectionViewer, DataSource } from '@angular/cdk/collections';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { BehaviorSubject, Observable, Subject, merge } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, takeUntil } from 'rxjs/operators';
+import { map, takeUntil } from 'rxjs/operators';
 import { Task } from '../../../../core/models/task.model';
 import { TaskService } from '../../../../core/services/task.service';
 
-export class TaskListDataSource extends DataSource<Task> {
+export class TaskListDataSource implements DataSource<Task> {
   private tasksSubject = new BehaviorSubject<Task[]>([]);
   private loadingSubject = new BehaviorSubject<boolean>(false);
   private destroy$ = new Subject<void>();
@@ -19,13 +19,10 @@ export class TaskListDataSource extends DataSource<Task> {
   private _sort!: MatSort;
   private _filter = '';
 
-  constructor(private taskService: TaskService) {
-    super();
-  }
+  constructor(private taskService: TaskService) {}
 
   set paginator(paginator: MatPaginator) {
     this._paginator = paginator;
-    this.loadTasks();
   }
 
   get paginator(): MatPaginator {
@@ -34,17 +31,13 @@ export class TaskListDataSource extends DataSource<Task> {
 
   set sort(sort: MatSort) {
     this._sort = sort;
-    this.loadTasks();
   }
 
   get sort(): MatSort {
     return this._sort;
   }
 
-  set filter(filter: string) {
-    this._filter = filter;
-    this.loadTasks();
-  }
+
 
   connect(): Observable<Task[]> {
     const dataMutations: Observable<any>[] = [];
@@ -58,10 +51,10 @@ export class TaskListDataSource extends DataSource<Task> {
     if (dataMutations.length > 0) {
       merge(...dataMutations)
         .pipe(takeUntil(this.destroy$))
-        .subscribe(() => this.loadTasks());
+        .subscribe(() => this.loadTasks(this._filter));
     } else {
       // No paginator/sort available (e.g. during server prerender) — load once with defaults
-      this.loadTasks();
+      this.loadTasks(this._filter);
     }
 
     return this.tasksSubject.asObservable();
@@ -74,7 +67,7 @@ export class TaskListDataSource extends DataSource<Task> {
     this.loadingSubject.complete();
   }
 
-  loadTasks(): void {
+  loadTasks(filter: string = this._filter, status: string = '', priority: string = '', dueDate: string | null = null): void {
     this.loadingSubject.next(true);
 
     const pageIndex = this._paginator?.pageIndex ?? 0;
@@ -82,13 +75,23 @@ export class TaskListDataSource extends DataSource<Task> {
     const sortActive = this._sort?.active;
     const sortDirection = this._sort?.direction;
 
-    const filters = {
+    const filters: any = {
       _page: pageIndex + 1,
       _limit: pageSize,
       _sort: sortActive as keyof Task,
       _order: sortDirection || undefined,
-      q: this._filter,
+      q: filter,
     };
+
+    if (status) {
+      filters.status = status;
+    }
+    if (priority) {
+      filters.priority = priority;
+    }
+    if (dueDate) {
+      filters.dueDate_like = dueDate.split('T')[0]; // Assuming date format for filtering
+    }
 
     this.taskService
       .getTasks(filters)

@@ -4,19 +4,55 @@
 // components according to the Material 3 design spec.
 // Learn more about theming and how to use it for your application's
 // custom components at https://material.angular.dev/guide/theming
-@use '@angular/material' as mat;
 @use './styles/variables' as *;
+@use '@angular/material' as mat;
+@include mat.core();
 
-html {
-  @include mat.theme((
-    color: (
-      primary: mat.$cyan-palette,
-      tertiary: mat.$orange-palette,
-    ),
-    typography: Roboto,
-    density: 0,
-  ));
+$my-primary: mat.define-palette(mat.$cyan-palette);
+$my-accent: mat.define-palette(mat.$orange-palette);
+
+$my-theme: mat.define-light-theme((
+  color: (
+    primary: $my-primary,
+    accent: $my-accent,
+  ),
+  typography: mat.define-typography-config(),
+  density: 0,
+));
+
+@include mat.all-component-themes($my-theme);
+
+// Dark theme definition scoped to `.dark-theme` class on the body element.
+$my-dark-theme: mat.define-dark-theme((
+  color: (
+    primary: $my-primary,
+    accent: $my-accent,
+  ),
+  typography: mat.define-typography-config(),
+  density: 0,
+));
+
+/* When body has .dark-theme class, apply the dark material theme and a few
+   helpful overrides for native elements. Toggle this class from the app. */
+.dark-theme {
+  @include mat.all-component-themes($my-dark-theme);
+
+  body {
+    color-scheme: dark;
+    background-color: var(--mat-sys-surface, #121212);
+    color: var(--mat-sys-on-surface, #e0e0e0);
+  }
+
+  /* dark scrollbar */
+  ::-webkit-scrollbar-track {
+    background: #1e1e1e;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #424242;
+  }
 }
+
 
 /* CSS Reset */
 *,

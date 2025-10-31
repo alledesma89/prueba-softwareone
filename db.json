@@ -1,31 +1,13 @@
 {
   "posts": [
     {
-      "title": "subir commits a github",
-      "body": "para poder enseñar el proyecto",
-      "userId": 1,
-      "status": "in-progress",
-      "priority": "medium",
-      "dueDate": "2025-10-31",
-      "id": 5
-    },
-    {
-      "title": "sadsadas",
-      "body": "dsasdasd",
+      "id": 6,
+      "title": "sadsadass",
+      "body": "",
       "userId": 1,
       "status": "completed",
       "priority": "high",
-      "dueDate": "2025-10-31",
-      "id": 6
-    },
-    {
-      "title": "dfdsaf",
-      "body": "sadsd",
-      "userId": 1,
-      "status": "pending",
-      "priority": "medium",
-      "dueDate": "2025-10-31",
-      "id": 7
+      "dueDate": "2025-10-31"
     },
     {
       "title": "sasdasd",
@@ -53,6 +35,24 @@
       "priority": "medium",
       "dueDate": "2025-10-31",
       "id": 10
+    },
+    {
+      "title": "wewew",
+      "body": "sadsad",
+      "userId": 1,
+      "status": "in-progress",
+      "priority": "medium",
+      "dueDate": "2025-10-31",
+      "id": 11
+    },
+    {
+      "title": "sada",
+      "body": "sda",
+      "userId": 1,
+      "status": "pending",
+      "priority": "medium",
+      "dueDate": "2025-10-31",
+      "id": 12
     }
   ]
 }
