@@ -162,6 +162,17 @@ import { Task } from '../../../../core/models/task.model';
           <mat-icon>add</mat-icon>
           Crear tarea
         </button>
+
+        <div style="margin-left:16px;display:flex;gap:8px;align-items:center;">
+          <button mat-stroked-button color="primary" (click)="exportTasks('json')" title="Exportar tareas en JSON">
+            <mat-icon>download</mat-icon>
+            Exportar JSON
+          </button>
+          <button mat-stroked-button color="primary" (click)="exportTasks('csv')" title="Exportar tareas en CSV">
+            <mat-icon>download</mat-icon>
+            Exportar CSV
+          </button>
+        </div>
       </mat-card-actions>
     </mat-card>
   `,
@@ -402,8 +413,8 @@ export class TaskListComponent implements OnInit, OnDestroy, AfterViewInit {
           this.isLoading = false;
           this.cdr.markForCheck();
         },
-        error: (error) => {
-          console.error('Error deleting task:', error);
+        error: (err: any) => {
+          console.error('Error deleting task:', err);
           this.alertMessage = 'Error al eliminar la tarea';
           this.alertType = 'error';
           this.isLoading = false;
@@ -429,6 +440,79 @@ export class TaskListComponent implements OnInit, OnDestroy, AfterViewInit {
       this.selectedPriority,
       this.selectedDueDate ? this.selectedDueDate.toISOString() : null
     );
+  }
+
+  /** Export tasks as CSV or JSON. Fetches all tasks matching current filters (no pagination). */
+  exportTasks(format: 'csv' | 'json') {
+    const searchValue = (this.searchInput && this.searchInput.nativeElement && this.searchInput.nativeElement.value)
+      ? this.searchInput.nativeElement.value.trim().toLowerCase()
+      : '';
+
+    // Build filters similar to data source but request many items
+    const filters: any = {
+      q: searchValue,
+      status: this.selectedStatus || undefined,
+      priority: this.selectedPriority || undefined,
+      _limit: 10000 // large limit to fetch all
+    };
+
+    if (this.selectedDueDate) {
+      filters.dueDate_like = this.selectedDueDate.toISOString().split('T')[0];
+    }
+
+    this.isLoading = true;
+    this.taskService.getTasks(filters).subscribe({
+      next: ({ tasks }) => {
+        this.isLoading = false;
+        if (format === 'json') {
+          this.downloadFile(JSON.stringify(tasks, null, 2), 'tasks.json', 'application/json');
+        } else {
+          const csv = this.convertTasksToCSV(tasks);
+          this.downloadFile(csv, 'tasks.csv', 'text/csv');
+        }
+      },
+      error: (err: any) => {
+        console.error('Error exporting tasks:', err);
+        this.alertMessage = 'Error al exportar tareas';
+        this.alertType = 'error';
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private convertTasksToCSV(tasks: Task[]): string {
+    if (!tasks || tasks.length === 0) return '';
+
+    const columns = ['id', 'title', 'body', 'status', 'priority', 'dueDate', 'userId'];
+    const header = columns.join(',');
+
+    const rows = tasks.map(t => {
+      return columns.map(col => {
+        const val = (t as any)[col] ?? '';
+        // escape double quotes
+        const escaped = String(val).replace(/"/g, '""');
+        // wrap in quotes if contains comma or newline
+        if (/[,\n\r"]/g.test(escaped)) {
+          return `"${escaped}"`;
+        }
+        return escaped;
+      }).join(',');
+    });
+
+    return [header, ...rows].join('\r\n');
+  }
+
+  private downloadFile(content: string, filename: string, mime: string) {
+    const blob = new Blob([content], { type: mime + ';charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
   }
 
   getStatusColor(status: string | undefined): 'primary' | 'accent' | 'warn' {
