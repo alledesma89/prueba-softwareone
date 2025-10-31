@@ -7,9 +7,7 @@
       <a routerLink="/tasks" style="color:inherit;margin-right:12px;text-decoration:none;">Tareas</a>
     </nav>
     <div style="margin-left:auto;font-size:0.9rem;opacity:0.9;">
-      <span *ngIf="isLoggedIn$ | async">
-        <button (click)="logout()" style="background:none;border:none;color:white;cursor:pointer;font-size:0.9rem;margin-left:12px;">Logout</button>
-      </span>
+
       Estado: <span *ngIf="isOnline(); else offline">Online</span><ng-template #offline>Offline</ng-template>
     </div>
   </div>

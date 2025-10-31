@@ -2,7 +2,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Component, OnInit, OnDestroy, signal, PLATFORM_ID, inject, afterNextRender } from '@angular/core';
 import { RouterOutlet, RouterLink, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { AuthService } from './core/services/auth.service';
+
 import { Observable } from 'rxjs';
 
 @Component({
@@ -15,10 +15,10 @@ export class App implements OnInit, OnDestroy {
   protected readonly title = signal('TaskManagementApp');
   private platformId = inject(PLATFORM_ID);
   isOnline = signal(isPlatformBrowser(this.platformId) ? navigator.onLine : true);
-  public isLoggedIn$: Observable<boolean>;
 
-  constructor(private authService: AuthService, private router: Router) {
-    this.isLoggedIn$ = this.authService.isLoggedIn$;
+
+  constructor(private router: Router) {
+
     if (isPlatformBrowser(this.platformId)) {
       afterNextRender(() => {
         window.addEventListener('online', this.updateOnlineStatus);
@@ -42,7 +42,5 @@ export class App implements OnInit, OnDestroy {
     this.isOnline.set(isPlatformBrowser(this.platformId) ? navigator.onLine : true);
   };
 
-  logout(): void {
-    this.authService.logout();
-  }
+
 }
