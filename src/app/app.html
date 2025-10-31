@@ -7,7 +7,12 @@
       <a routerLink="/dashboard" routerLinkActive="active" style="color:inherit;margin-right:12px;text-decoration:none;">Dashboard</a>
       <a routerLink="/tasks" routerLinkActive="active" style="color:inherit;margin-right:12px;text-decoration:none;">Tareas</a>
     </nav>
-    <div style="margin-left:auto;font-size:0.9rem;opacity:0.9;">
+    <div style="margin-left:auto;display:flex;align-items:center;gap:12px;font-size:0.9rem;opacity:0.95;">
+      <!-- Dark mode toggle -->
+      <button mat-icon-button aria-label="Toggle dark mode" (click)="toggleDarkMode()" title="Alternar modo oscuro">
+        <mat-icon>{{ darkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
       Estado: <span *ngIf="isOnline(); else offline">Online</span><ng-template #offline>Offline</ng-template>
     </div>
   </div>
