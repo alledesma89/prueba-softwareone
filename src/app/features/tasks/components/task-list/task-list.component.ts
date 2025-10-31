@@ -1,7 +1,9 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject, fromEvent, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Subject, fromEvent } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -14,6 +16,9 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
+import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 
 import { TaskService } from '../../../../core/services/task.service';
 import { TaskListDataSource } from './task-list.datasource';
@@ -25,6 +30,8 @@ import { Task } from '../../../../core/models/task.model';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
     MatChipsModule,
@@ -37,8 +44,9 @@ import { Task } from '../../../../core/models/task.model';
     MatSortModule,
     MatTableModule,
     AlertComponent,
-    MatPaginator,
-    MatSort
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -48,6 +56,35 @@ import { Task } from '../../../../core/models/task.model';
       </mat-card-header>
 
       <mat-card-content>
+        <div class="filters-container">
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Estado</mat-label>
+            <mat-select [(ngModel)]="selectedStatus" (selectionChange)="applyFilters()">
+              <mat-option value="">-- Todos --</mat-option>
+              <mat-option value="pending">Pendiente</mat-option>
+              <mat-option value="in-progress">En progreso</mat-option>
+              <mat-option value="completed">Completada</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Prioridad</mat-label>
+            <mat-select [(ngModel)]="selectedPriority" (selectionChange)="applyFilters()">
+              <mat-option value="">-- Todas --</mat-option>
+              <mat-option value="low">Baja</mat-option>
+              <mat-option value="medium">Media</mat-option>
+              <mat-option value="high">Alta</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="filter-field">
+            <mat-label>Fecha límite</mat-label>
+            <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDueDate" (dateChange)="applyFilters()">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
         <mat-form-field appearance="outline" class="search-field">
           <mat-label>Buscar tarea</mat-label>
           <input matInput #search placeholder="Título o descripción">
@@ -83,21 +120,16 @@ import { Task } from '../../../../core/models/task.model';
             </ng-container>
 
             <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
+              <th mat-header-cell *matHeaderCellDef aria-label="Acciones"></th>
               <td mat-cell *matCellDef="let task">
-                <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()">
-                  <mat-icon>more_vert</mat-icon>
-                </button>
-                <mat-menu #menu="matMenu">
-                  <button mat-menu-item (click)="editTask(task); $event.stopPropagation();">
+                <div class="action-buttons">
+                  <button mat-icon-button (click)="editTask(task); $event.stopPropagation()" color="primary">
                     <mat-icon>edit</mat-icon>
-                    <span>Editar</span>
                   </button>
-                  <button mat-menu-item (click)="deleteTask(task); $event.stopPropagation();">
+                  <button mat-icon-button (click)="deleteTask(task); $event.stopPropagation()" color="warn">
                     <mat-icon>delete</mat-icon>
-                    <span>Eliminar</span>
                   </button>
-                </mat-menu>
+                </div>
               </td>
             </ng-container>
 
@@ -119,7 +151,7 @@ import { Task } from '../../../../core/models/task.model';
           </app-alert>
         </div>
 
-        <mat-paginator [length]="100"
+        <mat-paginator [length]="dataSource.totalTasks"
                       [pageSize]="10"
                       [pageSizeOptions]="[5, 10, 25, 100]">
         </mat-paginator>
@@ -214,15 +246,92 @@ import { Task } from '../../../../core/models/task.model';
     th.mat-sort-header-sorted {
       color: black;
     }
+
+    .filters-container {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-field {
+      width: 200px;
+    }
+
+    @media (max-width: 768px) {
+      .filters-container {
+        flex-direction: row;
+        align-items: stretch;
+      }
+
+      .filter-field {
+        width: 100%;
+      }
+    }
+
+    /* Menu button styling */
+    .mat-column-actions {
+      width: 100px !important;
+      padding: 0 8px !important;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      
+      button {
+        opacity: 0.8;
+        transition: opacity 0.2s;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+
+    ::ng-deep {
+      .mat-mdc-menu-panel {
+        min-width: 144px !important;
+      }
+
+      .mat-mdc-menu-content {
+        padding: 0 !important;
+      }
+
+      .mat-mdc-menu-item {
+        min-height: 40px;
+        line-height: 40px;
+        
+        .mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+
+    /* Ensure menu is above other elements */
+    ::ng-deep .cdk-overlay-container {
+      z-index: 1000;
+    }
   `]
 })
 export class TaskListComponent implements OnInit, OnDestroy, AfterViewInit {
   displayedColumns: string[] = ['title', 'status', 'priority', 'dueDate', 'actions'];
+  
+  // Ensure menu items are shown on top of other elements
+  menuZIndex = 1000;
   dataSource: TaskListDataSource;
   destroy$ = new Subject<void>();
   isLoading = false;
   alertMessage = '';
   alertType: 'success' | 'error' = 'success';
+
+  selectedStatus: string = '';
+  selectedPriority: string = '';
+  selectedDueDate: Date | null = null;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -237,7 +346,9 @@ export class TaskListComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit() {
-    this.dataSource.loadTasks();
+    // Don't call applyFilters() here because ViewChild elements such as
+    // `searchInput` are not available until after view init. Initial data
+    // load is performed in ngAfterViewInit once paginator/sort/search are set.
   }
 
   ngAfterViewInit() {
@@ -246,6 +357,8 @@ export class TaskListComponent implements OnInit, OnDestroy, AfterViewInit {
     
     // Configure pagination
     this.dataSource.paginator = this.paginator;
+    // Load tasks once after paginator and sort are configured to avoid duplicate requests
+    this.dataSource.loadTasks();
 
     // Configure search
     if (this.searchInput) {
@@ -256,8 +369,7 @@ export class TaskListComponent implements OnInit, OnDestroy, AfterViewInit {
           takeUntil(this.destroy$)
         )
         .subscribe(() => {
-          const filterValue = this.searchInput.nativeElement.value;
-          this.dataSource.filter = filterValue.trim().toLowerCase();
+          this.applyFilters();
         });
     }
   }
@@ -306,7 +418,22 @@ export class TaskListComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cdr.markForCheck();
   }
 
-  getStatusColor(status: string): 'primary' | 'accent' | 'warn' {
+  applyFilters() {
+    const searchValue = (this.searchInput && this.searchInput.nativeElement && this.searchInput.nativeElement.value)
+      ? this.searchInput.nativeElement.value.trim().toLowerCase()
+      : '';
+
+    this.dataSource.loadTasks(
+      searchValue,
+      this.selectedStatus,
+      this.selectedPriority,
+      this.selectedDueDate ? this.selectedDueDate.toISOString() : null
+    );
+  }
+
+  getStatusColor(status: string | undefined): 'primary' | 'accent' | 'warn' {
+    if (!status) return 'warn';
+    
     switch (status.toLowerCase()) {
       case 'completed':
         return 'primary';

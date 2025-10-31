@@ -1,13 +1,13 @@
 <!-- Application shell with simple top nav -->
 <header class="topbar" style="background:#3f51b5;color:#fff;padding:12px 24px;">
   <div style="max-width:980px;margin:0 auto;display:flex;align-items:center;gap:16px;">
-    <h1 style="margin:0;font-size:1.2rem;">TaskManagementApp</h1>
+    <h1 style="margin:0;font-size:1.2rem;" routerLink="/home" style="cursor:pointer;">TaskManagementApp</h1>
     <nav style="margin-left:16px;">
-      <a routerLink="/dashboard" style="color:inherit;margin-right:12px;text-decoration:none;">Dashboard</a>
-      <a routerLink="/tasks" style="color:inherit;margin-right:12px;text-decoration:none;">Tareas</a>
+      <a routerLink="/home" routerLinkActive="active" style="color:inherit;margin-right:12px;text-decoration:none;">Inicio</a>
+      <a routerLink="/dashboard" routerLinkActive="active" style="color:inherit;margin-right:12px;text-decoration:none;">Dashboard</a>
+      <a routerLink="/tasks" routerLinkActive="active" style="color:inherit;margin-right:12px;text-decoration:none;">Tareas</a>
     </nav>
     <div style="margin-left:auto;font-size:0.9rem;opacity:0.9;">
-
       Estado: <span *ngIf="isOnline(); else offline">Online</span><ng-template #offline>Offline</ng-template>
     </div>
   </div>
@@ -16,9 +16,3 @@
 <main class="app-shell" style="padding:24px;max-width:980px;margin:0 auto;">
   <router-outlet></router-outlet>
 </main>
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * End of Placeholder  * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-
-
-<router-outlet />

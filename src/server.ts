@@ -1,16 +1,15 @@
-import {
-  AngularNodeAppEngine,
-  createNodeRequestHandler,
-  isMainModule,
-  writeResponseToNodeResponse,
-} from '@angular/ssr/node';
+import { APP_BASE_HREF } from '@angular/common';
+import { CommonEngine } from '@angular/ssr';
+import { fileURLToPath } from 'url';
 import express from 'express';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 
-const browserDistFolder = join(import.meta.dirname, '../browser');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const browserDistFolder = join(dirname(__dirname), 'browser');
 
 const app = express();
-const angularApp = new AngularNodeAppEngine();
+const commonEngine = new CommonEngine();
 
 /**
  * Example Express Rest API endpoints can be defined here.
@@ -38,31 +37,26 @@ app.use(
 /**
  * Handle all other requests by rendering the Angular application.
  */
-app.use((req, res, next) => {
-  angularApp
-    .handle(req)
-    .then((response) =>
-      response ? writeResponseToNodeResponse(response, res) : next(),
-    )
-    .catch(next);
+app.get('*', (req, res, next) => {
+  const { protocol, originalUrl, baseUrl, headers } = req;
+
+  import('./app/app.bootstrap.server').then(mod => {
+    commonEngine
+      .render({
+        bootstrap: mod.default,
+        documentFilePath: join(browserDistFolder, 'index.html'),
+        url: `${protocol}://${headers.host}${originalUrl}`,
+        publicPath: browserDistFolder,
+        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }]
+      })
+      .then((html) => res.send(html))
+      .catch((err) => next(err));
+  });
 });
 
-/**
- * Start the server if this module is the main entry point, or it is ran via PM2.
- * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
- */
-if (isMainModule(import.meta.url) || process.env['pm_id']) {
-  const port = process.env['PORT'] || 4000;
-  app.listen(port, (error) => {
-    if (error) {
-      throw error;
-    }
-
+const port = process.env['PORT'] || 4000;
+if (import.meta.url === `file://${__filename}`) {
+  app.listen(port, () => {
     console.log(`Node Express server listening on http://localhost:${port}`);
   });
 }
-
-/**
- * Request handler used by the Angular CLI (for dev-server and during build) or Firebase Cloud Functions.
- */
-export const reqHandler = createNodeRequestHandler(app);
